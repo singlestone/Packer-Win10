@@ -1,5 +1,6 @@
 # Packages
 *.iso
+*.msi
 *.msu
 *.box
 *.rar
