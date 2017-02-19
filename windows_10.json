@@ -1,0 +1,72 @@
+{
+  "builders": [
+    {
+      "type": "virtualbox-iso",
+      "iso_url": "{{user `iso_url`}}",
+      "iso_checksum_type": "{{user `iso_checksum_type`}}",
+      "iso_checksum": "{{user `iso_checksum`}}",
+      "headless": false,
+      "boot_wait": "2m",
+	  "communicator": "winrm",
+      "winrm_username": "vagrant",
+      "winrm_password": "vagrant",
+      "winrm_timeout": "12h",
+	  "shutdown_timeout": "10m",
+      "shutdown_command": "shutdown /s /t 10 /f /d p:4:1 /c \"Packer Shutdown\"",
+      "guest_os_type": "Windows81_64",
+      "disk_size": 61440,
+	  "guest_additions_mode": "attach",
+      "floppy_files": [
+        "{{user `autounattend`}}",
+		"./scripts/Add_modules.ps1",
+		"./scripts/Config_Execution_Policy.ps1",
+		"./scripts/Config_Vagrant_Environment.ps1",
+		"./scripts/Config_Winrm.ps1",
+		"./scripts/Install_Windows_Updates.ps1",
+		"./scripts/oracle-cert.cer",
+		"./modules/PSWindowsUpdate.zip"
+      ],
+      "vboxmanage": [
+        [
+          "modifyvm",
+          "{{.Name}}",
+          "--memory",
+          "2048"
+        ],
+        [
+          "modifyvm",
+          "{{.Name}}",
+          "--cpus",
+          "2"
+        ]
+      ]
+    }
+  ],
+  "provisioners": [
+  	{
+	"type": "file",
+	"source": "./scripts/Autounattend.xml",
+	"destination": "C:/Windows/system32/sysprep/Autounattend.xml"
+	},
+    {
+      "type": "powershell",
+      "scripts": [
+        "./scripts/Install_Chef.ps1"
+      ]
+    }
+  ],
+  "post-processors": [
+    {
+      "type": "vagrant",
+      "keep_input_artifact": true,
+      "output": "windows_10_{{.Provider}}.box",
+      "vagrantfile_template": "vagrantfile-windows_10.template"
+    }
+  ],
+  "variables": {
+    "iso_url": "http://care.dlservice.microsoft.com/dl/download/B/B/3/BB3611B6-9781-437F-A293-AB43B85C2190/10586.0.151029-1700.TH2_RELEASE_CLIENTENTERPRISEEVAL_OEMRET_X64FRE_EN-US.ISO",
+    "iso_checksum_type": "sha1",
+    "iso_checksum": "93845bbcc9677000df76cb2a5267c8eb52995bae",
+    "autounattend": "./answer_files/10/Autounattend.xml"
+  }
+}
